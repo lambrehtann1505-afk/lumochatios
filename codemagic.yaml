@@ -1,0 +1,32 @@
+workflows:
+  lumochat-ipa:
+    name: LumoChat IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      node: 20
+      xcode: latest
+    scripts:
+      - name: Prepare web files
+        script: |
+          mkdir -p www
+          cp index.html www/index.html
+      - name: Install and add iOS
+        script: |
+          npm install
+          npx cap add ios
+          npx cap sync ios
+      - name: Archive unsigned
+        script: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -sdk iphoneos -archivePath build/App.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Package IPA
+        script: |
+          cd ios/App/build
+          mkdir Payload
+          cp -r App.xcarchive/Products/Applications/App.app Payload/
+          zip -qr LumoChat.ipa Payload
+    artifacts:
+      - ios/App/build/LumoChat.ipa
