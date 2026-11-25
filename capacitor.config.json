@@ -1,0 +1,6 @@
+{
+  "appId": "com.lumochat.app",
+  "appName": "LumoChat",
+  "webDir": "www",
+  "ios": { "backgroundColor": "#000000", "contentInset": "never" }
+}

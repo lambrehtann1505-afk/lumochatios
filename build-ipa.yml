@@ -1,0 +1,31 @@
+name: Build IPA
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: mkdir -p www && cp index.html www/index.html
+      - run: npm install
+      - run: npx cap add ios
+      - run: npx cap sync ios
+      - name: Archive (unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -sdk iphoneos -archivePath build/App.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Package IPA
+        working-directory: ios/App/build
+        run: |
+          mkdir Payload
+          cp -r App.xcarchive/Products/Applications/App.app Payload/
+          zip -qr LumoChat.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LumoChat-ipa
+          path: ios/App/build/LumoChat.ipa
